@@ -1,5 +1,7 @@
 from typing import runtime_checkable
 import pandas as pd
+import tkinter as tk
+from tkinter import filedialog
 
 # This program removes several rows from a given Excel spreadsheet and makes a new spreadsheet containing desired cars
 
@@ -7,22 +9,50 @@ import pandas as pd
 # (any makes not in this list are heavily limited or not considered at all)
 def isWhitelistedMake(string): 
     make_whitelist = ['ACURA', 'BMW', 'HONDA', 'HYUNDAI', 'RAM', 'SCION', 'SUBARU', 'TOYOTA', 'VOLKSWAGEN']
-    return string.upper() in make_whitelist
+    return str(string).upper() in make_whitelist
 
 # Allows certain models from limited makes to be added to the final list
 def isWhitelistedModel(string):
-    model_whitelist = ["CRUZE", "EQUINOX", "MALIBU", "SONIC", "AVENGER", "RAM 1500", "RAM 2500", "RAM 3500", "F-150", "RANGER", "ACADIA", "TERRAIN", 
+    model_whitelist = ["1500", "2500", "CRUZE", "EQUINOX", "EXPRESS", "MALIBU", "SONIC", "AVENGER", "RAM 1500", "RAM 2500", "RAM 3500", "F-150", "RANGER", "ACADIA", "TERRAIN", 
         "COMPASS", 'LIBERTY', 'PATRIOT', 'WRANGLER', 'SORENTO', 'SOUL', 'IS250', 'IS350' 'RX350', 'MAZDA3', 'MAZDA6', 
         'C-CLASS', 'ALTIMA', 'ROGUE', 'VERSA']
-    return string.upper() in model_whitelist
+    return str(string).upper() in model_whitelist
 
+# Record user input for given runlist, beginning year, and ending year
+# Using tkinter to recieve file input
+tk.Tk().withdraw()
+file = filedialog.askopenfilename()
 
-# Record user input for given runlist, beginning year, and ending year    
-filename = input("Enter file name: ")
+# #Create an instance of Tkinter frame
+# win= tk.Tk()
+
+# #Set the geometry of Tkinter frame
+# win.geometry("500x500")
+
+# def display_text():
+#    global entry
+#    string= entry.get()
+#    label.configure(text=string)
+
+# #Initialize a Label to display the User Input
+# label= tk.Label(win, text="", font=("Courier 22 bold"))
+# label.pack()
+
+# #Create an Entry widget to accept User Input
+# entry= tk.Entry(win, width= 40)
+# entry.focus_set()
+# entry.pack()
+
+# #Create a Button to validate Entry Widget
+# tk.Button(win, text= "Okay",width= 20, command= display_text).pack(pady=20)
+
+# win.mainloop()
+
 begin_year = int(input("Enter beginning year: "))
 end_year = int(input("Enter end year: "))
 
-init_runlist = pd.read_excel(filename + '.xlsx')
+# Filter the initial lists by Make, Model, Odometer, Year and then outputs a final sorted list based on Make and Model 
+init_runlist = pd.read_excel(file)
 
 make_filter = init_runlist["Make"].apply(isWhitelistedMake)
 filtered_by_make = init_runlist[make_filter]
@@ -43,4 +73,4 @@ writer = pd.ExcelWriter('output.xlsx')
 final_list.to_excel(writer)
 # save the excel
 writer.save()
-print('DataFrame is written successfully to Excel File.')
+print('DataFrame is written successfully to "output.xlsx".')
