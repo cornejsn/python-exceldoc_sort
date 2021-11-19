@@ -2,8 +2,11 @@ from typing import runtime_checkable
 import pandas as pd
 import tkinter as tk
 from tkinter import filedialog
+from tkinter import messagebox
 
-# This program removes several rows from a given Excel spreadsheet and makes a new spreadsheet containing desired cars
+########################################################################################################################
+# This program removes several rows from a given Excel spreadsheet and makes a new spreadsheet containing desired cars #
+########################################################################################################################
 
 # Allows rows from a runlist that contain a whitelisted make to be added to the final list 
 # (any makes not in this list are heavily limited or not considered at all)
@@ -18,59 +21,66 @@ def isWhitelistedModel(string):
         'C-CLASS', 'ALTIMA', 'ROGUE', 'VERSA']
     return str(string).upper() in model_whitelist
 
-# Record user input for given runlist, beginning year, and ending year
-# Using tkinter to recieve file input
+# Main function that sorts a given runlist based on given parameters
+def SortRunlist():
+    # Filter the initial lists by Make, Model, Odometer, Year and then outputs a final sorted list based on Make and Model
+    file = filedialog.askopenfilename() 
+    init_runlist = pd.read_excel(file)
+
+    min_year = int(t1.get())
+    max_year = int(t2.get())
+    min_mile = int(t3.get())
+    max_mile = int(t4.get())
+
+    make_filter = init_runlist["Make"].apply(isWhitelistedMake)
+    filtered_by_make = init_runlist[make_filter]
+    model_filter = init_runlist["Model"].apply(isWhitelistedModel)
+    filtered_by_model = init_runlist[model_filter]
+
+    frames = [filtered_by_make, filtered_by_model]
+    filtered_list = pd.concat(frames)
+
+    final_list = filtered_list.loc[(filtered_list["Odometer"] >= min_mile) & (filtered_list["Odometer"] <= max_mile) 
+                                    & (filtered_list["Year"] >= min_year) & (filtered_list["Year"] <= max_year)]
+    final_list = final_list.sort_values(by=['Make', 'Model'])
+                        
+
+    # create excel writer object
+    writer = pd.ExcelWriter('output.xlsx')
+    # write dataframe to excel
+    final_list.to_excel(writer)
+    # save the excel
+    writer.save()
+    messagebox.showinfo('Success!','Sorted list was written to "output.xlsx".')
+
+# Using tkinter to record user input for given runlist, beginning year, and ending year
 tk.Tk().withdraw()
-file = filedialog.askopenfilename()
+win= tk.Tk()
+win.title('Runlist Sorter')
 
-# #Create an instance of Tkinter frame
-# win= tk.Tk()
+l1=tk.Label(win,text="Min. Year:")
+t1=tk.Entry(win)
+l2=tk.Label(win,text="Max. Year")
+t2=tk.Entry(win)
+l3=tk.Label(win,text="Min. Mileage")
+t3=tk.Entry(win)
+l4=tk.Label(win,text="Max. Mileage")
+t4=tk.Entry(win)
+b1=tk.Button(win,text="Submit",command=SortRunlist)
 
-# #Set the geometry of Tkinter frame
-# win.geometry("500x500")
+l1.grid(row=0,column=0, padx=(5,5), pady=5)
+t1.grid(row=0,column=1, pady=5)
+l2.grid(row=1,column=0, padx=(5,5), pady=5)
+t2.grid(row=1,column=1, pady=5)
+l3.grid(row=2,column=0, padx=(5,5), pady=5)
+t3.grid(row=2,column=1, pady=5)
+l4.grid(row=3,column=0, padx=(5,5), pady=5)
+t4.grid(row=3,column=1, pady=5)
+b1.grid(row=4,column=1, padx=50, pady=5)
 
-# def display_text():
-#    global entry
-#    string= entry.get()
-#    label.configure(text=string)
+def on_closing():
+    if messagebox.askokcancel("Quit", "Do you want to quit?"):
+        win.destroy()
 
-# #Initialize a Label to display the User Input
-# label= tk.Label(win, text="", font=("Courier 22 bold"))
-# label.pack()
-
-# #Create an Entry widget to accept User Input
-# entry= tk.Entry(win, width= 40)
-# entry.focus_set()
-# entry.pack()
-
-# #Create a Button to validate Entry Widget
-# tk.Button(win, text= "Okay",width= 20, command= display_text).pack(pady=20)
-
-# win.mainloop()
-
-begin_year = int(input("Enter beginning year: "))
-end_year = int(input("Enter end year: "))
-
-# Filter the initial lists by Make, Model, Odometer, Year and then outputs a final sorted list based on Make and Model 
-init_runlist = pd.read_excel(file)
-
-make_filter = init_runlist["Make"].apply(isWhitelistedMake)
-filtered_by_make = init_runlist[make_filter]
-model_filter = init_runlist["Model"].apply(isWhitelistedModel)
-filtered_by_model = init_runlist[model_filter]
-
-frames = [filtered_by_make, filtered_by_model]
-filtered_list = pd.concat(frames)
-
-final_list = filtered_list.loc[(filtered_list["Odometer"] >= 50000) & (filtered_list["Odometer"] <= 180000) 
-                                & (filtered_list["Year"] >= begin_year) & (filtered_list["Year"] <= end_year)]
-final_list = final_list.sort_values(by=['Make', 'Model'])
-                    
-
-# create excel writer object
-writer = pd.ExcelWriter('output.xlsx')
-# write dataframe to excel
-final_list.to_excel(writer)
-# save the excel
-writer.save()
-print('DataFrame is written successfully to "output.xlsx".')
+win.protocol("WM_DELETE_WINDOW", on_closing)
+win.mainloop()
